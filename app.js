@@ -1,3 +1,6 @@
+// https://devcenter.heroku.com/articles/scheduler
+// http://stackoverflow.com/questions/13345664/using-heroku-scheduler-with-node-js
+
 var fs = require('fs');
 var http = require('http');
 var url = require('url');
