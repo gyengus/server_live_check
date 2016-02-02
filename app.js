@@ -44,7 +44,7 @@ function searchLink(link, callback) {
 
 function insertLink(link, laststate) {
 	if (!client) return false;
-	var sql = "insert into statuses (link, laststate) values ('" + link + "', laststate = " + laststate + ");";
+	var sql = "insert into statuses (link, laststate) values ('" + link + "', " + laststate + ");";
 	client.query(sql, function(err) {
 		if (err) {
 			console.log('SQL: ' + sql + '; ' + err);
