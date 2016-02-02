@@ -28,7 +28,7 @@ client.connect(function(err) {
 
 function searchLink(link, callback) {
 	if (!client) return false;
-	var sql = 'select * from statuses where link like "' + link + '" limit 1';
+	var sql = "select * from statuses where link like '" + link + "' limit 1";
 	client.query(sql, function(err, result) {
 		if (err) {
 			console.log('SQL: ' + sql + '; ' + err);
@@ -44,7 +44,7 @@ function searchLink(link, callback) {
 
 function insertLink(link, laststate) {
 	if (!client) return false;
-	var sql = 'insert into statuses set link = "' + link + '", laststate = ' + laststate;
+	var sql = "insert into statuses set link = '" + link + "', laststate = " + laststate;
 	client.query(sql, function(err) {
 		if (err) {
 			console.log('SQL: ' + sql + '; ' + err);
@@ -54,7 +54,7 @@ function insertLink(link, laststate) {
 
 function saveLink(link, laststate) {
 	if (!client) return false;
-	var sql = 'update statuses set laststate = ' + laststate + ' where link = "' + link + '" limit 1';
+	var sql = "update statuses set laststate = " + laststate + " where link = '" + link + "' limit 1";
 	client.query(sql, function(err) {
 		if (err) {
 			console.log('SQL: ' + sql + '; ' + err);
