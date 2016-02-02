@@ -28,7 +28,7 @@ client.connect(function(err) {
 
 function searchLink(link, callback) {
 	if (!client) return false;
-	client.query('select * from `statuses` where `link` like "' + link '" limit 1', function(err, result) {
+	client.query('select * from `statuses` where `link` like "' + link + '" limit 1', function(err, result) {
 		if (err) {
 			console.log(err);
 		} else {
@@ -113,7 +113,7 @@ function checkServer(link) {
 			} else {
 				insertLink(link, 1);
 			}
-		}
+		});
 		
 		/*res.on('data', (chunk) => {
 			//console.log('BODY: ' + chunk);
@@ -132,7 +132,7 @@ function checkServer(link) {
 			} else {
 				insertLink(link, 0);
 			}
-		}
+		});
 		sendNotification(link, false);
 	});
 	req.end();	
