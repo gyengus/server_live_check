@@ -28,7 +28,7 @@ client.connect(function(err) {
 
 function searchLink(link, callback) {
 	if (!client) return false;
-	var sql = 'select * from statuses where link like "' + link + '" limit 1';
+	var sql = "select * from statuses where link like '" + link + "' limit 1";
 	client.query(sql, function(err, result) {
 		if (err) {
 			console.log('SQL: ' + sql + '; ' + err);
