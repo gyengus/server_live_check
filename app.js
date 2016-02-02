@@ -28,9 +28,10 @@ client.connect(function(err) {
 
 function searchLink(link, callback) {
 	if (!client) return false;
-	client.query('select * from `statuses` where `link` like "' + link + '" limit 1', function(err, result) {
+	var sql = 'select * from statuses where link like "' + link + '" limit 1';
+	client.query(sql, function(err, result) {
 		if (err) {
-			console.log(err);
+			console.log('SQL: ' + sql + '; ' + err);
 		} else {
 			if (result.rows[0]) {
 				callback(true, result.rows[0]);
@@ -43,18 +44,20 @@ function searchLink(link, callback) {
 
 function insertLink(link, laststate) {
 	if (!client) return false;
-	client.query('insert into `statuses` set `link` = "' + link + '", `laststate` = "' + laststate + '"', function(err) {
+	var sql = 'insert into statuses set link = "' + link + '", laststate = ' + laststate;
+	client.query(, function(err) {
 		if (err) {
-			console.log(err);
+			console.log('SQL: ' + sql + '; ' + err);
 		}
 	});
 }
 
 function saveLink(link, laststate) {
 	if (!client) return false;
-	client.query('update `statuses` set `laststate` = "' + laststate + '" where `link` = "' + link + '" limit 1', function(err) {
+	var sql = 'update statuses set laststate = ' + laststate + ' where link = "' + link + '" limit 1';
+	client.query(sql, function(err) {
 		if (err) {
-			console.log(err);
+			console.log('SQL: ' + sql + '; ' + err);
 		}
 	});
 	
