@@ -1,12 +1,6 @@
 // https://devcenter.heroku.com/articles/scheduler
 // http://stackoverflow.com/questions/13345664/using-heroku-scheduler-with-node-js
 
-var fs = require('fs');
-var http = require('http');
-var url = require('url');
-
-var CONFIG = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-
 global.getFormattedDate = function() {
 	var time = new Date();
 	var month = ((time.getMonth() + 1) > 9 ? '' : '0') + (time.getMonth() + 1);
@@ -17,11 +11,63 @@ global.getFormattedDate = function() {
 	return time.getFullYear() + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
 };
 
-function sendNotification(server) {
+var fs = require('fs');
+var http = require('http');
+var url = require('url');
+var pg = require('pg');
+
+var CONFIG = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+
+var client = new pg.Client(process.env.DATABASE_URL);
+
+client.connect(function(err) {
+	if (err) {
+		return console.log('DB connection error: ' + err);
+	}
+});
+
+function searchLink(link, callback) {
+	if (!client) return false;
+	client.query('select * from `statuses` where `link` like "' + link '" limit 1', function(err, result) {
+		if (err) {
+			console.log(err);
+		} else {
+			if (result.rows[0]) {
+				callback(true, result.rows[0]);
+			} else {
+				callback(false, false);
+			}
+		}
+	});
+}
+
+function insertLink(link, laststate) {
+	if (!client) return false;
+	client.query('insert into `statuses` set `link` = "' + link + '", `laststate` = "' + laststate + '"', function(err) {
+		if (err) {
+			console.log(err);
+		}
+	});
+}
+
+function saveLink(link, laststate) {
+	if (!client) return false;
+	client.query('update `statuses` set `laststate` = "' + laststate + '" where `link` = "' + link + '" limit 1', function(err) {
+		if (err) {
+			console.log(err);
+		}
+	});
+	
+}
+
+function sendNotification(server, online) {
 	var postData = '{"value1": "' + server + '", "value2": "' + getFormattedDate() + '"}';
+	var path = '/trigger/serverOffline/with/key/cOkqzR_mQT5rQgdp5V4cTl';
+	if (online) path = '/trigger/serverOnline/with/key/cOkqzR_mQT5rQgdp5V4cTl';
+
 	var options = {
 		hostname: 'maker.ifttt.com',
-		path: '/trigger/serverOffline/with/key/cOkqzR_mQT5rQgdp5V4cTl',
+		path: path,
 		port: 80,
 		method: 'GET',
 		headers: {
@@ -57,7 +103,18 @@ function checkServer(link) {
 		}
 	}
 	var req = http.request(options, (res) => {
-		//console.log(link + ':' + options.port + ' Status: ' + res.statusCode);
+		// Sikeres kérés esetén fut le
+		console.log(link + ':' + options.port + ' Status: ' + res.statusCode);
+		// Mentsük el az adatbázisba az eredményt
+		searchLink(link, function(megvan, lastdata) {
+			if (megvan) {
+				if (lastdata.laststate == 0) sendNotification(link, true);
+				saveLink(link, 1);
+			} else {
+				insertLink(link, 1);
+			}
+		}
+		
 		/*res.on('data', (chunk) => {
 			//console.log('BODY: ' + chunk);
 		});
@@ -66,8 +123,17 @@ function checkServer(link) {
 		});*/
 	});
 	req.on('error', (e) => {
-		console.log('Error: ' + link + ', ' + e.message);
-		sendNotification(link);
+		//console.log('Error: ' + link + ', ' + e.message);
+		// Mentsük el az adatbázisba az eredményt
+		searchLink(link, function(megvan, lastdata) {
+			if (megvan) {
+				if (lastdata.laststate == 1) sendNotification(link, false);
+				saveLink(link, 0);
+			} else {
+				insertLink(link, 0);
+			}
+		}
+		sendNotification(link, false);
 	});
 	req.end();	
 }
