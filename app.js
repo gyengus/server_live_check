@@ -79,6 +79,7 @@ function sendNotification(server, online) {
 		}
 	}
 	var req = http.request(options, (res) => {
+		console.log('Notification sent: ' + server + ', ' + (online ? 'online' : 'offline'));
 		/*res.on('data', (chunk) => {
 			//console.log('BODY: ' + chunk);
 		});
@@ -87,7 +88,7 @@ function sendNotification(server, online) {
 		});*/
 	});
 	req.on('error', (e) => {
-		console.log('Error: ' + e.message);
+		console.log('Notification send error: ' + e.message);
 	});
 	req.write(postData);
 	req.end();	
@@ -107,7 +108,7 @@ function checkServer(link) {
 	}
 	var req = http.request(options, (res) => {
 		// Sikeres kérés esetén fut le
-		console.log(link + ':' + options.port + ' Status: ' + res.statusCode);
+		//console.log(link + ':' + options.port + ' Status: ' + res.statusCode);
 		// Mentsük el az adatbázisba az eredményt
 		searchLink(link, function(megvan, lastdata) {
 			if (megvan) {
