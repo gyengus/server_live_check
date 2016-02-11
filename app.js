@@ -16,6 +16,8 @@ var http = require('http');
 var url = require('url');
 var pg = require('pg');
 
+console.log('Checking server\'s availability...');
+
 var CONFIG = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
 var client = new pg.Client(process.env.DATABASE_URL);
