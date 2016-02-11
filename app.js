@@ -65,8 +65,8 @@ function saveLink(link, laststate) {
 
 function sendNotification(server, online) {
 	var postData = '{"value1": "' + server + '", "value2": "' + getFormattedDate() + '"}';
-	var path = '/trigger/serverOffline/with/key/cOkqzR_mQT5rQgdp5V4cTl';
-	if (online) path = '/trigger/serverOnline/with/key/cOkqzR_mQT5rQgdp5V4cTl';
+	var path = '/trigger/serverOffline/with/key/' + CONFIG.ifttt_maker_api_key;
+	if (online) path = '/trigger/serverOnline/with/key/' + CONFIG.ifttt_maker_api_key;
 
 	var options = {
 		hostname: 'maker.ifttt.com',
@@ -79,13 +79,9 @@ function sendNotification(server, online) {
 		}
 	}
 	var req = http.request(options, (res) => {
-		console.log('Notification sent: ' + server + ', ' + (online ? 'online' : 'offline'));
-		/*res.on('data', (chunk) => {
-			//console.log('BODY: ' + chunk);
-		});
 		res.on('end', () => {
-			//console.log('END');
-		});*/
+			console.log('Notification sent: ' + server + ', ' + (online ? 'online' : 'offline'));
+		});
 	});
 	req.on('error', (e) => {
 		console.log('Notification send error: ' + e.message);
@@ -96,7 +92,6 @@ function sendNotification(server, online) {
 }
 
 function checkServer(link) {
-	//console.log(JSON.stringify(url.parse(link)));
 	var options = {
 		hostname: url.parse(link).host,
 		path: url.parse(link).pathname,
@@ -107,9 +102,6 @@ function checkServer(link) {
 		}
 	}
 	var req = http.request(options, (res) => {
-		// Sikeres kérés esetén fut le
-		//console.log(link + ':' + options.port + ' Status: ' + res.statusCode);
-		// Mentsük el az adatbázisba az eredményt
 		searchLink(link, function(megvan, lastdata) {
 			if (megvan) {
 				if (lastdata.laststate == 0) sendNotification(link, true);
@@ -118,17 +110,8 @@ function checkServer(link) {
 				insertLink(link, 1);
 			}
 		});
-		
-		/*res.on('data', (chunk) => {
-			//console.log('BODY: ' + chunk);
-		});
-		res.on('end', () => {
-			//console.log('END');
-		});*/
 	});
 	req.on('error', (e) => {
-		//console.log('Error: ' + link + ', ' + e.message);
-		// Mentsük el az adatbázisba az eredményt
 		searchLink(link, function(megvan, lastdata) {
 			if (megvan) {
 				if (lastdata.laststate == 1) sendNotification(link, false);
