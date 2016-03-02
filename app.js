@@ -21,16 +21,16 @@ var client = new pg.Client(process.env.DATABASE_URL);
 
 client.connect(function(err) {
 	if (err) {
-		return console.log('DB connection error: ' + err);
+		return console.log(`DB connection error: ${err}`);
 	}
 });
 
 function searchLink(link, callback) {
 	if (!client) return false;
-	var sql = "select * from statuses where link like '" + link + "';";
+	var sql = `select * from statuses where link like '${link}';`;
 	client.query(sql, function(err, result) {
 		if (err) {
-			console.log('SQL: ' + sql + '; ' + err);
+			console.log(`SQL: ${sql}; ${err}`);
 		} else {
 			if (result.rows[0]) {
 				callback(true, result.rows[0]);
@@ -43,28 +43,28 @@ function searchLink(link, callback) {
 
 function insertLink(link, laststate) {
 	if (!client) return false;
-	var sql = "insert into statuses (link, laststate) values ('" + link + "', " + laststate + ");";
+	var sql = `insert into statuses (link, laststate) values ('${link}', ${laststate});`;
 	client.query(sql, function(err) {
 		if (err) {
-			console.log('SQL: ' + sql + '; ' + err);
+			console.log(`SQL: ${sql}; ${err}`);
 		}
 	});
 }
 
 function saveLink(link, laststate) {
 	if (!client) return false;
-	var sql = "update statuses set laststate = " + laststate + " where link = '" + link + "';";
+	var sql = `update statuses set laststate = ${laststate} where link = '${link}';`;
 	client.query(sql, function(err) {
 		if (err) {
-			console.log('SQL: ' + sql + '; ' + err);
+			console.log(`SQL: ${sql}; ${err}`);
 		}
 	});
 	
 }
 
 function sendNotification(server, online) {
-	var postData = '{"value1": "' + server + '", "value2": "' + getFormattedDate() + '"}';
-	var path = '/trigger/' + (online ? 'serverOnline' : 'serverOffline') + '/with/key/' + CONFIG.ifttt_maker_api_key;
+	var postData = `{"value1": "${server}", "value2": "${getFormattedDate()}"}`;
+	var path = `/trigger/${(online ? 'serverOnline' : 'serverOffline')}/with/key/${CONFIG.ifttt_maker_api_key}`;
 
 	var options = {
 		hostname: 'maker.ifttt.com',
@@ -78,11 +78,11 @@ function sendNotification(server, online) {
 	}
 	var req = http.request(options, (res) => {
 		res.on('end', () => {
-			console.log('Notification sent: ' + server + ', ' + (online ? 'online' : 'offline'));
+		console.log(`Notification sent: ${server}, ${(online ? 'online' : 'offline')}`);
 		});
 	});
 	req.on('error', (e) => {
-		console.log('Notification send error: ' + e.message);
+		console.log(`Notification send error: ${e.message}`);
 	});
 	req.write(postData);
 	req.end();	
@@ -100,8 +100,8 @@ function checkServer(link) {
 		}
 	}
 	var req = http.request(options, (res) => {
-		searchLink(link, function(megvan, lastdata) {
-			if (megvan) {
+		searchLink(link, function(founded, lastdata) {
+			if (founded) {
 				if (lastdata.laststate == 0) sendNotification(link, true);
 				saveLink(link, 1);
 			} else {
@@ -110,8 +110,8 @@ function checkServer(link) {
 		});
 	});
 	req.on('error', (e) => {
-		searchLink(link, function(megvan, lastdata) {
-			if (megvan) {
+		searchLink(link, function(founded, lastdata) {
+			if (founded) {
 				if (lastdata.laststate == 1) sendNotification(link, false);
 				saveLink(link, 0);
 			} else {
