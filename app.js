@@ -11,55 +11,46 @@ global.getFormattedDate = function() {
 var fs = require('fs');
 var http = require('http');
 var url = require('url');
-var pg = require('pg');
+var knex = require('knex')({
+	client: 'pg',
+	connection: process.env.DATABASE_URL
+})
 
 console.log('Checking server\'s availability...');
 
 var CONFIG = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
-var client = new pg.Client(process.env.DATABASE_URL);
-
-client.connect(function(err) {
-	if (err) {
-		return console.log(`DB connection error: ${err}`);
-	}
-});
-
 function searchLink(link, callback) {
-	if (!client) return false;
 	var sql = `select * from statuses where link like '${link}';`;
-	client.query(sql, function(err, result) {
-		if (err) {
-			console.log(`SQL: ${sql}; ${err}`);
-		} else {
-			if (result.rows[0]) {
-				callback(true, result.rows[0]);
+	knex.select().from('statuses').where('link', link).limit(1)
+		.then(function(row) {
+			//console.log(JSON.stringify(row));
+			if (row[0]) {
+				callback(true, row[0]);
 			} else {
 				callback(false, false);
 			}
-		}
-	});
+		})
+		.catch(function(error) {
+			console.log(`SQL: ${sql}; ${err}`);
+		});
 }
 
 function insertLink(link, laststate) {
-	if (!client) return false;
-	var sql = `insert into statuses (link, laststate) values ('${link}', ${laststate});`;
-	client.query(sql, function(err) {
-		if (err) {
+	knex('statuses').insert({link: link, laststate: laststate})
+		.catch(function(err) {
 			console.log(`SQL: ${sql}; ${err}`);
-		}
-	});
+		});
 }
 
 function saveLink(link, laststate) {
-	if (!client) return false;
-	var sql = `update statuses set laststate = ${laststate} where link = '${link}';`;
-	client.query(sql, function(err) {
-		if (err) {
+	knex('statuses').where('link', link).update({laststate: laststate})
+		/*.then(function() {
+			console.log(`State saved for link: ${link}, state: ${laststate}`);
+		})*/
+		.catch(function(err) {
 			console.log(`SQL: ${sql}; ${err}`);
-		}
-	});
-	
+		});	
 }
 
 function sendNotification(server, online) {
