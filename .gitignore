@@ -25,5 +25,7 @@ node_modules
 # Debug log from npm
 npm-debug.log
 
+dist
 info.txt
 *.bak
+config.json

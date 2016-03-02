@@ -1,6 +1,3 @@
-// https://devcenter.heroku.com/articles/scheduler
-// http://stackoverflow.com/questions/13345664/using-heroku-scheduler-with-node-js
-
 global.getFormattedDate = function() {
 	var time = new Date();
 	var month = ((time.getMonth() + 1) > 9 ? '' : '0') + (time.getMonth() + 1);
@@ -67,8 +64,7 @@ function saveLink(link, laststate) {
 
 function sendNotification(server, online) {
 	var postData = '{"value1": "' + server + '", "value2": "' + getFormattedDate() + '"}';
-	var path = '/trigger/serverOffline/with/key/' + CONFIG.ifttt_maker_api_key;
-	if (online) path = '/trigger/serverOnline/with/key/' + CONFIG.ifttt_maker_api_key;
+	var path = '/trigger/' + (online ? 'serverOnline' : 'serverOffline') + '/with/key/' + CONFIG.ifttt_maker_api_key;
 
 	var options = {
 		hostname: 'maker.ifttt.com',
