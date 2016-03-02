@@ -1,11 +1,11 @@
 global.getFormattedDate = function() {
 	var time = new Date();
-	var month = ((time.getMonth() + 1) > 9 ? '' : '0') + (time.getMonth() + 1);
-	var day = (time.getDate() > 9 ? '' : '0') + time.getDate();
-	var hour = (time.getHours() > 9 ? '' : '0') + time.getHours();
-	var minute = (time.getMinutes() > 9 ? '' : '0') + time.getMinutes();
-	var second = (time.getSeconds() > 9 ? '' : '0') + time.getSeconds();
-	return time.getFullYear() + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
+	var month = `${((time.getMonth() + 1) > 9 ? '' : '0')}${time.getMonth() + 1}`;
+	var day = `${(time.getDate() > 9 ? '' : '0')}${time.getDate()}`;
+	var hour = `${(time.getHours() > 9 ? '' : '0')}${time.getHours()}`;
+	var minute = `${(time.getMinutes() > 9 ? '' : '0')}${time.getMinutes()}`;
+	var second = `${(time.getSeconds() > 9 ? '' : '0')}${time.getSeconds()}`;
+	return `${time.getFullYear()}-${month}-${day} ${hour}:${minute}:${second}`;
 };
 
 var fs = require('fs');
