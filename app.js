@@ -16,7 +16,7 @@ var knex = require('knex')({
 	connection: process.env.DATABASE_URL
 })
 
-console.log('Checking server\'s availability...');
+console.log(`Checking server's availability...`);
 
 var CONFIG = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
@@ -24,7 +24,6 @@ function searchLink(link, callback) {
 	var sql = `select * from statuses where link like '${link}';`;
 	knex.select().from('statuses').where('link', link).limit(1)
 		.then(function(row) {
-			//console.log(JSON.stringify(row));
 			if (row[0]) {
 				callback(true, row[0]);
 			} else {
@@ -69,7 +68,7 @@ function sendNotification(server, online) {
 	}
 	var req = http.request(options, (res) => {
 		res.on('end', () => {
-		console.log(`Notification sent: ${server}, ${(online ? 'online' : 'offline')}`);
+			console.log(`Notification sent: ${server}, ${(online ? 'online' : 'offline')}`);
 		});
 	});
 	req.on('error', (e) => {
@@ -93,7 +92,7 @@ function checkServer(link) {
 	var req = http.request(options, (res) => {
 		searchLink(link, function(founded, lastdata) {
 			if (founded) {
-				if (lastdata.laststate == 0) sendNotification(link, true);
+				if (!lastdata.laststate) sendNotification(link, true);
 				saveLink(link, 1);
 			} else {
 				insertLink(link, 1);
@@ -103,13 +102,12 @@ function checkServer(link) {
 	req.on('error', (e) => {
 		searchLink(link, function(founded, lastdata) {
 			if (founded) {
-				if (lastdata.laststate == 1) sendNotification(link, false);
+				if (lastdata.laststate) sendNotification(link, false);
 				saveLink(link, 0);
 			} else {
 				insertLink(link, 0);
 			}
 		});
-		sendNotification(link, false);
 	});
 	req.end();	
 }
