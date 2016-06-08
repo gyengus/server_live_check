@@ -21,6 +21,7 @@ console.log(`Checking server's availability...`);
 var CONFIG = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
 function searchLink(link, callback) {
+	console.log('Searchlink ' + link);
 	var sql = `select * from statuses where link like '${link}';`;
 	knex.select().from('statuses').where('link', link).limit(1)
 		.then(function(row) {
@@ -31,11 +32,12 @@ function searchLink(link, callback) {
 			}
 		})
 		.catch(function(error) {
-			console.log(`SQL: ${sql}; ${err}`);
+			console.log(`SQL: ${sql}; ${error}`);
 		});
 }
 
 function insertLink(link, laststate) {
+	console.log('Insertlink ' + link);
 	knex('statuses').insert({link: link, laststate: laststate})
 		.catch(function(err) {
 			console.log(`SQL: ${sql}; ${err}`);
@@ -43,6 +45,7 @@ function insertLink(link, laststate) {
 }
 
 function saveLink(link, laststate) {
+	console.log('Savelink ' + link);
 	knex('statuses').where('link', link).update({laststate: laststate})
 		/*.then(function() {
 			console.log(`State saved for link: ${link}, state: ${laststate}`);
@@ -53,8 +56,8 @@ function saveLink(link, laststate) {
 }
 
 function sendNotification(server, online) {
-	var postData = `{"value1": "${server}", "value2": "${getFormattedDate()}"}`;
-	var path = `/trigger/${(online ? 'serverOnline' : 'serverOffline')}/with/key/${CONFIG.ifttt_maker_api_key}`;
+	var postData = `{"value1": "${getFormattedDate()} ${server} is ${(online ? 'online' : 'offline')}"}`;
+	var path = `/trigger/${CONFIG.ifttt_maker_event_name}/with/key/${CONFIG.ifttt_maker_api_key}`;
 
 	var options = {
 		hostname: 'maker.ifttt.com',
@@ -67,6 +70,7 @@ function sendNotification(server, online) {
 		}
 	}
 	var req = http.request(options, (res) => {
+		console.log(`Notification sent: ${server}, ${(online ? 'online' : 'offline')}`);
 		res.on('end', () => {
 			console.log(`Notification sent: ${server}, ${(online ? 'online' : 'offline')}`);
 		});
@@ -80,6 +84,7 @@ function sendNotification(server, online) {
 }
 
 function checkServer(link) {
+	console.log('Checkserver: ' + link);
 	var options = {
 		hostname: url.parse(link).host,
 		path: url.parse(link).pathname,
