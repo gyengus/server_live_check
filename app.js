@@ -14,11 +14,16 @@ var url = require('url');
 var knex = require('knex')({
 	client: 'pg',
 	connection: process.env.DATABASE_URL
-})
+});
+var work = 0;
 
 console.log(`Checking server's availability...`);
 
 var CONFIG = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+
+function checkWork() {
+	if (work <= 0) process.exit();
+}
 
 function searchLink(link, callback) {
 	console.log('Searchlink ' + link);
@@ -37,19 +42,25 @@ function searchLink(link, callback) {
 }
 
 function insertLink(link, laststate) {
-	console.log('Insertlink ' + link);
 	knex('statuses').insert({link: link, laststate: laststate})
+		.then(function() {
+			console.log(`Insertlink: ${link}`);
+			work--;
+			checkWork();
+		})
 		.catch(function(err) {
 			console.log(`SQL: ${sql}; ${err}`);
 		});
 }
 
 function saveLink(link, laststate) {
-	console.log('Savelink ' + link);
+	//console.log('Savelink ' + link);
 	knex('statuses').where('link', link).update({laststate: laststate})
-		/*.then(function() {
+		.then(function() {
 			console.log(`State saved for link: ${link}, state: ${laststate}`);
-		})*/
+			work--;
+			checkWork();
+		})
 		.catch(function(err) {
 			console.log(`SQL: ${sql}; ${err}`);
 		});	
@@ -118,5 +129,6 @@ function checkServer(link) {
 }
 
 for (var i = 0; i < CONFIG.urls.length; i++) {
+	work++;
 	checkServer(CONFIG.urls[i]);
 }
