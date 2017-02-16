@@ -1,4 +1,4 @@
-##Sever live check
+#Sever live check
 
 This is a Node.js application
 Tested on Heroku

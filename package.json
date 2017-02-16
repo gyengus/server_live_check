@@ -1,12 +1,12 @@
 {
   "name": "server_live_check",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "app.js",
   "scripts": {
     "start": "node app.js"
   },
   "dependencies": {
-    "knex": "^0.10.0",
-    "pg": "4.4.4"
+    "knex": "*",
+    "pg": "*"
   }
 }
