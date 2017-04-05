@@ -10,6 +10,7 @@ global.getFormattedDate = function() {
 
 var fs = require('fs');
 var http = require('http');
+var https = require('https');
 var url = require('url');
 
 const params = url.parse(process.env.DATABASE_URL);
@@ -89,6 +90,8 @@ function sendNotification(server, online) {
 		sendNotificationIFTTT(server, online);
 	} else if (CONFIG.pushbullet_access_token && CONFIG.pushbullet_email) {
 		sendNotificationPushbullet(server, online);
+	} else {
+	    console.log(`Notification service is not set`);
 	}
 }
 
@@ -96,7 +99,7 @@ function sendNotificationIFTTT(server, online) {
 	sendRequest(`http://maker.ifttt.com/trigger/${CONFIG.ifttt_maker_event_name}/with/key/${CONFIG.ifttt_maker_api_key}`,
 				{'Content-Type': 'application/json'},
 				`{"value1": "${getFormattedDate()} ${server} is ${(online ? 'online' : 'offline')}"}`,
-				'GET');
+				'POST');
 }
 
 function sendNotificationPushbullet(server, online) {
@@ -107,6 +110,11 @@ function sendNotificationPushbullet(server, online) {
 }
 
 function sendRequest(link, headers, body, method) {
+	if (url.parse(link).protocol == 'https:') {
+		var client = https;
+	} else {
+		var client = http;
+	}
 	if (body.length) headers['Content-Length'] = body.length;
 	var options = {
 		hostname: url.parse(link).host,
@@ -115,51 +123,58 @@ function sendRequest(link, headers, body, method) {
 		method: method,
 		headers: headers
 	}
-	var req = http.request(options, (res) => {
-		console.log(`Notification sent: ${server}, ${(online ? 'online' : 'offline')}`);
+	var req = client.request(options, (res) => {
 		res.on('end', () => {
-			console.log(`Notification sent: ${server}, ${(online ? 'online' : 'offline')}`);
+			console.log(`Notification sent: ${body}`);
 		});
 	});
 	req.on('error', (e) => {
 		console.log(`Notification send error: ${e.message}`);
 	});
 	req.write(body);
-	req.end();	
+	req.end();
 }
 
 function checkServer(link) {
 	console.log('Checkserver: ' + link);
+	if (url.parse(link).protocol == 'https:') {
+		var client = https;
+	} else {
+		var client = http;
+	}
 	var options = {
 		hostname: url.parse(link).host,
 		path: url.parse(link).pathname,
 		port: (url.parse(link).port ? url.parse(link).port : (url.parse(link).protocol == 'https:' ? 443 : 80)),
-		method: 'GET',
+		method: 'HEAD',
 		headers: {
 			'User-agent': 'Server live check'
 		}
 	}
-	var req = http.request(options, (res) => {
-		searchLink(link, function(founded, lastdata) {
-			if (founded) {
-				if (!lastdata.laststate) sendNotification(link, true);
-				saveLink(link, 1);
-			} else {
-				insertLink(link, 1);
-			}
+	var req = client.request(options, (res) => {
+		res.on('end', () => {
+			searchLink(link, function(found, lastdata) {
+				if (found) {
+					if (!lastdata.laststate) sendNotification(link, true);
+					saveLink(link, 1);
+				} else {
+					insertLink(link, 1);
+				}
+			});
 		});
 	});
 	req.on('error', (e) => {
-		searchLink(link, function(founded, lastdata) {
-			if (founded) {
+		searchLink(link, function(found, lastdata) {
+			if (found) {
 				if (lastdata.laststate) sendNotification(link, false);
 				saveLink(link, 0);
 			} else {
+				sendNotification(link, false);
 				insertLink(link, 0);
 			}
 		});
 	});
-	req.end();	
+	req.end();
 }
 
 for (var i = 0; i < CONFIG.urls.length; i++) {
