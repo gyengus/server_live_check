@@ -152,6 +152,8 @@ function checkServer(link) {
 		}
 	}
 	var req = client.request(options, (res) => {
+		res.on('data', (d) => {
+		});
 		res.on('end', () => {
 			searchLink(link, function(found, lastdata) {
 				if (found) {
